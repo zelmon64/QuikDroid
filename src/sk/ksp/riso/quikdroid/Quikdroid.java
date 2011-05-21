@@ -39,8 +39,7 @@ import java.util.List;
  * a basic example for how you would get started writing an input method, to
  * be fleshed out as appropriate.
  */
-public class Quikdroid extends InputMethodService 
-        implements android.inputmethodservice.KeyboardView.OnKeyboardActionListener {
+public class Quikdroid extends InputMethodService {
     
     private KeyboardView mInputView;
     
@@ -68,7 +67,7 @@ public class Quikdroid extends InputMethodService
     @Override public View onCreateInputView() {
         mInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
-//        mInputView.setOnKeyboardActionListener(this);
+        mInputView.setInputConnection(getCurrentInputConnection());
         return mInputView;
     }
 
@@ -88,56 +87,7 @@ public class Quikdroid extends InputMethodService
      */
     @Override public void onStartInput(EditorInfo attribute, boolean restarting) {
         super.onStartInput(attribute, restarting);
-        
-        
-        /*
-        // We are now going to initialize our state based on the type of
-        // text being edited.
-        switch (attribute.inputType&EditorInfo.TYPE_MASK_CLASS) {
-            case EditorInfo.TYPE_CLASS_NUMBER:
-            case EditorInfo.TYPE_CLASS_DATETIME:
-                break;
-                
-            case EditorInfo.TYPE_CLASS_PHONE:
-                break;
-                
-            case EditorInfo.TYPE_CLASS_TEXT:
-                
-                // We now look for a few special variations of text that will
-                // modify our behavior.
-                int variation = attribute.inputType &  EditorInfo.TYPE_MASK_VARIATION;
-                if (variation == EditorInfo.TYPE_TEXT_VARIATION_PASSWORD ||
-                        variation == EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
-                    // Do not display predictions / what the user is typing
-                    // when they are entering a password.
-                }
-                
-                if (variation == EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS 
-                        || variation == EditorInfo.TYPE_TEXT_VARIATION_URI
-                        || variation == EditorInfo.TYPE_TEXT_VARIATION_FILTER) {
-                    // Our predictions are not useful for e-mail addresses
-                    // or URIs.
-                }
-                
-                if ((attribute.inputType&EditorInfo.TYPE_TEXT_FLAG_AUTO_COMPLETE) != 0) {
-                    // If this is an auto-complete text view, then our predictions
-                    // will not be shown and instead we will allow the editor
-                    // to supply their own.  We only show the editor's
-                    // candidates when in fullscreen mode, otherwise relying
-                    // own it displaying its own UI.
-                }
-                
-                // We also want to look at the current state of the editor
-                // to decide whether our alphabetic keyboard should start out
-                // shifted.
-                break;
-                
-            default:
-                // For all unknown input types, default to the alphabetic
-                // keyboard with no special features.
-        }
-        */
-        
+        if (mInputView != null) mInputView.setInputConnection(getCurrentInputConnection());
     }
 
     /**
@@ -146,48 +96,19 @@ public class Quikdroid extends InputMethodService
      */
     @Override public void onFinishInput() {
         super.onFinishInput();
-        
-        
-        /*
         if (mInputView != null) {
-            mInputView.closing();
+          mInputView.setInputConnection(null);
         }
-        */
     }
     
+/*    
     @Override public void onStartInputView(EditorInfo attribute, boolean restarting) {
         super.onStartInputView(attribute, restarting);
         // Apply the selected keyboard to the input view.
         //mInputView.closing();
     }
+*/
     
-    // Implementation of KeyboardViewListener
-
-    public void onKey(int primaryCode, int[] keyCodes) {
-    }
-
-    public void onText(CharSequence text) {
-    }
-
-    
-    public void swipeRight() {
-    }
-    
-    public void swipeLeft() {
-    }
-
-    public void swipeDown() {
-    }
-
-    public void swipeUp() {
-    }
-    
-    public void onPress(int primaryCode) {
-    }
-    
-    public void onRelease(int primaryCode) {
-    }
-
     public boolean onEvaluateFullscreenMode() {
       return true;
     }

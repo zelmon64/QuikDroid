@@ -26,6 +26,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.MeasureSpec;
+import android.view.inputmethod.InputConnection;
 import android.util.AttributeSet;
 import java.lang.Math;
 
@@ -43,6 +44,12 @@ public class KeyboardView extends View {
   public KeyboardView(Context context, AttributeSet attr, int defStyle) {
     super(context, attr, defStyle);
     initRegions();
+  }
+
+  InputConnection ic;
+
+  public void setInputConnection(InputConnection nic) {
+    ic = nic;
   }
 
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -126,7 +133,7 @@ public class KeyboardView extends View {
     public void init0(int size, int rot) {
       int i;
       n = 0;
-      for (i=0; i<MAX_POINTS; i++) {
+      for (i=MAX_POINTS-1; i>=0; i--) {
         addPt(size, 0.5 + 0.22*Math.sin( i*2*Math.PI/(MAX_POINTS-1) - 0.5*(MAX_POINTS-1)*2*Math.PI ),
                     0.5 + 0.22*Math.cos( i*2*Math.PI/(MAX_POINTS-1) - 0.5*(MAX_POINTS-1)*2*Math.PI ),
                     rot );
@@ -142,10 +149,10 @@ public class KeyboardView extends View {
     public boolean inside(int x, int y) {
       int i;
       for (i=1; i<n; i++) {
-        if (vmul( P[i<<2  ] - P[(i-1)<<2  ],
-                  P[i<<2|1] - P[(i-1)<<2|1],
-                          x - P[(i-1)<<2  ],
-                          y - P[(i-1)<<2|1] ) < 0) return false;
+        if (vmul( P[i<<1  ] - P[(i-1)<<1  ],
+                  P[i<<1|1] - P[(i-1)<<1|1],
+                          x - P[(i-1)<<1  ],
+                          y - P[(i-1)<<1|1] ) < 0) return false;
       }
       return true;
     }
@@ -184,7 +191,15 @@ public class KeyboardView extends View {
   int buflen = 0;
 
   public boolean onTouchEvent(MotionEvent event) {
-    
+    if (ic != null) {
+      if (event.getAction() == event.ACTION_DOWN) {
+        int r = getRegion( (int)event.getX(), (int)event.getY() );
+        if (r != -1) {
+          ic.commitText( new String( new char[] { (char)('a'+r) } ), 1);
+        }
+      }
+    }
+    return true;
   }
 
 

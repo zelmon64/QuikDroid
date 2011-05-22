@@ -25,6 +25,7 @@ import android.graphics.drawable.Drawable;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.KeyEvent;
 import android.view.View.MeasureSpec;
 import android.view.inputmethod.InputConnection;
 import android.util.AttributeSet;
@@ -186,21 +187,137 @@ public class KeyboardView extends View {
     return -1;
   }
 
-  static int BUFSIZE = 10;
+  static int BUFSIZE = 64;
   int[] buffer = new int[BUFSIZE];
   int buflen = 0;
+  static int DOWN = -1;
+  static int UP = -2;
 
   public boolean onTouchEvent(MotionEvent event) {
     if (ic != null) {
       if (event.getAction() == event.ACTION_DOWN) {
+        buflen = 0;
+        buffer[buflen++] = DOWN;
+      }
+      if (event.getAction() == event.ACTION_DOWN || event.getAction() == event.ACTION_MOVE) {
         int r = getRegion( (int)event.getX(), (int)event.getY() );
         if (r != -1) {
-          ic.commitText( new String( new char[] { (char)('a'+r) } ), 1);
+          if (buflen==BUFSIZE-1) buflen = 0;
+          if (buflen == 0 || buffer[buflen-1] != r)
+            buffer[buflen++] = r;
         }
       }
+      if (event.getAction() == event.ACTION_UP) {
+        if (buflen==BUFSIZE-1) buflen = 0;
+        buffer[buflen++] = UP;
+      }
+      processBuffer();
     }
     return true;
   }
 
+  static int SHIFT = 65537;
+  static int CAPS = 65538;
+  static int SPECIAL = 65539;
+  static int MOVE_HOME = 65540;
+  static int MOVE_END = 65541;
+  boolean shift = false;
+  boolean caps = false;
+  boolean special = false;
+
+  static int[][] open = { 
+    { '5', 0, -KeyEvent.KEYCODE_DPAD_UP, 0, -KeyEvent.KEYCODE_DPAD_RIGHT, '\\', '0', '/', -KeyEvent.KEYCODE_DPAD_LEFT },
+    { '`', '1', -KeyEvent.KEYCODE_TAB, '=', 0, '{', '[', '(', '|' },
+    { -KeyEvent.KEYCODE_DPAD_DOWN, '^', '2', '-', '>', 0, 0/*-KeyEvent.KEYCODE_PAGE_DOWN*/, 0, '<' },
+    { '\'', '%', '$', '3', /*paste*/0, ')', ']', '}', 0 },
+    { -KeyEvent.KEYCODE_DPAD_LEFT, 0, 0, '!', '6', -KeyEvent.KEYCODE_ENTER, /*alt*/ 0, 0, MOVE_HOME },
+    { 0, 0, 0, ':', ';', '9', '*', '&', 0 },
+    { 0, 0, 0/*-KeyEvent.KEYCODE_PAGE_UP*/, 0, 0, '_', '8', '@', 0 },
+    { 0, '#', 0, 0, 0, '+', '~', '7', '"' },
+    { -KeyEvent.KEYCODE_DPAD_RIGHT, 0/*-KeyEvent.KEYCODE_ESCAPE*/, 0, 0, MOVE_END, 0, /*ctrl*/0, SPECIAL, '4' },
+  }; 
+
+  static int[][] closed = { 
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 'a', ',', 'z', 0, 0, CAPS, SHIFT, 'c' },
+    { 0, 'd', 'e', 'b', 'b', 0, 0, 0, 'd' },
+    { 0, 'g', 'f', 'i', 'h', 'j', 0, 0, 0 },
+    { 0, 0, 'l', 'l', ' ', 'k', 'k', 0, 0 },
+    { 0, 0, 0, 'm', 'n', 'o', 'p', 'q', 0 },
+    { 0, 0, 0, 0, 't', 't', 's', 'r', 'r' },
+    { 0, '?', 0, 0, 0, '.', 'v', 'u', 'w' },
+    { 0, 'y', 'y', 0, 0, 0, 'x', 'x', -KeyEvent.KEYCODE_DEL },
+  }; 
+
+  void send(int c) {
+    if (c==SHIFT) { 
+      shift = !shift;  
+      special = false;
+      display(false);
+    } else if (c==CAPS) { 
+      caps = !caps; 
+      special = false;
+      display(false);
+    } else if (c==SPECIAL) { 
+      special = !special;
+      display(special);
+    } else if (c==MOVE_HOME) { 
+      ic.commitText( "", -1024);
+    } else if (c==MOVE_END) { 
+      ic.commitText( "", 1024);
+    } else if (c>0) {
+      if (shift != caps)
+        ic.commitText( (new String( new char[] { (char)c } )).toUpperCase(), 1);
+      else ic.commitText( new String( new char[] { (char)c } ), 1);
+      shift = false;
+      display(special);
+    } else if (c<0) {
+      ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, -c));
+      ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, -c));
+    }
+  }
+
+  void processBuffer() {
+
+    if (buffer[0] == DOWN && buffer[buflen-1] == UP) {
+      if (buflen==3) {
+        send( open[buffer[1]][buffer[1]] );
+      } else if (buflen >=4) {
+        send( open[buffer[1]][buffer[buflen-2]] );
+      }
+
+      buflen = 0;
+      return;
+    }
+    if (buffer[buflen-1] == UP) {
+      if (buflen>=2 && buffer[buflen-2]!=0) {
+        send( open[buffer[0]][buffer[buflen-2]] );
+      } 
+      buflen = 0;
+      return;
+    }
+    if (buflen>=3 && buffer[0] == 0 && buffer[buflen-1] == 0) {
+      send( closed[buffer[1]][buffer[buflen-2]] );
+      buflen = 1;
+      return;
+    }
+    if (buflen>=4 && buffer[1] == 0 && buffer[buflen-1] == 0) {
+      send( closed[buffer[2]][buffer[buflen-2]] );
+      buflen = 1;
+      buffer[0] = 0;
+      return;
+    }
+      // ic.commitText( new String( new char[] { (char)('a'+r) } ), 1);
+  }
+
+  void display(boolean special) {
+    if (special) 
+      setBackgroundResource(sk.ksp.riso.quikdroid.R.drawable.kbd_special);
+    else if (shift==caps)
+      setBackgroundResource(sk.ksp.riso.quikdroid.R.drawable.kbd_main);
+    else
+      setBackgroundResource(sk.ksp.riso.quikdroid.R.drawable.kbd_shift);
+        
+  }
 
 }

@@ -54,8 +54,8 @@ public class KeyboardView extends View {
   }
 
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    int w = Math.min( View.MeasureSpec.getSize(widthMeasureSpec), 
-                      View.MeasureSpec.getSize(heightMeasureSpec) );
+    int w = (Math.min( View.MeasureSpec.getSize(widthMeasureSpec), 
+                      View.MeasureSpec.getSize(heightMeasureSpec) )*scale) / 10;
     setMeasuredDimension(w, w);
   }
 
@@ -163,6 +163,8 @@ public class KeyboardView extends View {
   Region[] R = new Region[REGIONS];
 
   int size;
+  int scale = 10;
+
   void initRegions() {
     int i;
     size = 0;
@@ -280,7 +282,9 @@ public class KeyboardView extends View {
   void processBuffer() {
 
     if (buffer[0] == DOWN && buffer[buflen-1] == UP) {
-      if (buflen==3) {
+      if (buflen>10 && buffer[1]!=0 && buffer[buflen-2]!=0) {
+        resize( (buffer[buflen-2] - buffer[1] + 12) % 8 - 4);
+      } else if (buflen==3) {
         send( open[buffer[1]][buffer[1]] );
       } else if (buflen >=4) {
         send( open[buffer[1]][buffer[buflen-2]] );
@@ -318,6 +322,13 @@ public class KeyboardView extends View {
     else
       setBackgroundResource(sk.ksp.riso.quikdroid.R.drawable.kbd_shift);
         
+  }
+
+  void resize(int inc) {
+    scale += inc;
+    if (scale>10) scale = 10;
+    if (scale<1) scale = 1;
+    requestLayout();
   }
 
 }

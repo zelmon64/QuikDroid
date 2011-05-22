@@ -68,7 +68,10 @@ public class Quikdroid extends InputMethodService {
         mInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
         mInputView.setInputConnection(getCurrentInputConnection());
-        return mInputView;
+        getWindow().setContentView(mInputView);
+        getWindow().getWindow().setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
+                                          android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        return null;
     }
 
     /**

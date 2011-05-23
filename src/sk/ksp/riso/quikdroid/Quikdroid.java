@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class Quikdroid extends InputMethodService {
     
-    private KeyboardView mInputView;
+    private KeyboardView myInputView;
     
     /**
      * Main initialization of the input method component.  Be sure to call
@@ -65,10 +65,11 @@ public class Quikdroid extends InputMethodService {
      * a configuration change.
      */
     @Override public View onCreateInputView() {
-        mInputView = (KeyboardView) getLayoutInflater().inflate(
+        myInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
-        mInputView.setInputConnection(getCurrentInputConnection());
-        getWindow().setContentView(mInputView);
+        myInputView.setInputConnection(getCurrentInputConnection());
+        getWindow().setContentView(myInputView);
+        myInputView.getViewTreeObserver().addOnComputeInternalInsetsListener(super.mInsetsComputer);
         getWindow().getWindow().setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
                                           android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         return null;
@@ -90,7 +91,9 @@ public class Quikdroid extends InputMethodService {
      */
     @Override public void onStartInput(EditorInfo attribute, boolean restarting) {
         super.onStartInput(attribute, restarting);
-        if (mInputView != null) mInputView.setInputConnection(getCurrentInputConnection());
+        if (myInputView != null) {
+          myInputView.setInputConnection(getCurrentInputConnection());
+        }
     }
 
     /**
@@ -99,8 +102,8 @@ public class Quikdroid extends InputMethodService {
      */
     @Override public void onFinishInput() {
         super.onFinishInput();
-        if (mInputView != null) {
-          mInputView.setInputConnection(null);
+        if (myInputView != null) {
+          myInputView.setInputConnection(null);
         }
     }
     
@@ -108,7 +111,7 @@ public class Quikdroid extends InputMethodService {
     @Override public void onStartInputView(EditorInfo attribute, boolean restarting) {
         super.onStartInputView(attribute, restarting);
         // Apply the selected keyboard to the input view.
-        //mInputView.closing();
+        //myInputView.closing();
     }
 */
     

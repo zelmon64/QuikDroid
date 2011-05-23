@@ -24,7 +24,6 @@ import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -70,7 +69,7 @@ public class Quikdroid extends InputMethodService {
                 R.layout.input, null);
         myInputView.setInputConnection(getCurrentInputConnection());
         getWindow().setContentView(myInputView);
-        myInputView.getViewTreeObserver().addOnComputeInternalInsetsListener(myInsetsComputer);
+        myInputView.getViewTreeObserver().addOnComputeInternalInsetsListener(super.mInsetsComputer);
         getWindow().getWindow().setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
                                           android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         return null;
@@ -129,15 +128,9 @@ public class Quikdroid extends InputMethodService {
     }
 
     public void onComputeInsets(Insets outInsets) {
+      outInsets.contentTopInsets = outInsets.visibleTopInsets = 
+        getWindow().getWindow().getDecorView().getHeight();
+      outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
     }
-
-    final ViewTreeObserver.OnComputeInternalInsetsListener myInsetsComputer =
-          new ViewTreeObserver.OnComputeInternalInsetsListener() {
-      public void onComputeInternalInsets(ViewTreeObserver.InternalInsetsInfo info) {
-        View decor = getWindow().getWindow().getDecorView();
-        info.contentInsets.top = info.visibleInsets.top = decor.getHeight();
-        info.setTouchableInsets(ViewTreeObserver.InternalInsetsInfo.TOUCHABLE_INSETS_FRAME);
-      }
-    };
 
 }

@@ -28,13 +28,9 @@ import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
-import android.content.res.Configuration;
-import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 /**
  * Example of writing an input method for a soft keyboard.  This code is
@@ -61,12 +57,6 @@ public class Quikdroid extends InputMethodService {
      */
     @Override public void onInitializeInterface() {
     }
-
-    @Override public void onConfigurationChanged(Configuration newConfig) {
-      super.onConfigurationChanged(newConfig);
-      getWindow().getWindow().setLayout(WRAP_CONTENT, WRAP_CONTENT);
-    }
-
     
     /**
      * Called by the framework when your view for creating input needs to
@@ -78,7 +68,11 @@ public class Quikdroid extends InputMethodService {
         myInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
         myInputView.setInputConnection(getCurrentInputConnection());
-        return myInputView;
+        getWindow().setContentView(myInputView);
+        myInputView.getViewTreeObserver().addOnComputeInternalInsetsListener(super.mInsetsComputer);
+        getWindow().getWindow().setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
+                                          android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        return null;
     }
 
     /**

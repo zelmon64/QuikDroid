@@ -124,4 +124,10 @@ public class Quikdroid extends InputMethodService {
       setExtractViewShown(false);
     }
 
+    public void onComputeInsets(Insets outInsets) {
+      outInsets.contentTopInsets = outInsets.visibleTopInsets = 
+        getWindow().getWindow().getDecorView().getHeight();
+      outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
+    }
+
 }

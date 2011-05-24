@@ -28,6 +28,9 @@ import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.view.ViewGroup.LayoutParams;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,11 +71,7 @@ public class Quikdroid extends InputMethodService {
         myInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
         myInputView.setInputConnection(getCurrentInputConnection());
-        getWindow().setContentView(myInputView);
-        myInputView.getViewTreeObserver().addOnComputeInternalInsetsListener(super.mInsetsComputer);
-        getWindow().getWindow().setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
-                                          android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-        return null;
+        return myInputView;
     }
 
     /**
@@ -94,6 +93,29 @@ public class Quikdroid extends InputMethodService {
         if (myInputView != null) {
           myInputView.setInputConnection(getCurrentInputConnection());
         }
+    }
+
+    public void updateInputViewShown() {
+      View oldInputView = myInputView;
+      super.updateInputViewShown();
+      if (myInputView != null && oldInputView != myInputView) {
+        getWindow().getWindow().setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
+                                          android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        myInputView.setLayoutParams( new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+
+        if (myInputView.getParent() != null) {
+          ViewGroup inputFrame = (ViewGroup)(myInputView.getParent());
+          inputFrame.removeAllViews();
+          if (inputFrame.getParent() != null) {
+            ViewGroup inputFrameP = (ViewGroup)(inputFrame.getParent());
+            inputFrameP.removeAllViews();
+            inputFrameP.addView(myInputView, new FrameLayout.LayoutParams(
+                  LayoutParams.WRAP_CONTENT,
+                  LayoutParams.WRAP_CONTENT));
+          }
+        }
+      }
+
     }
 
     /**

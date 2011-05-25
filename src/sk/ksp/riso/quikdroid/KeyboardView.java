@@ -30,6 +30,7 @@ import android.view.View.MeasureSpec;
 import android.view.inputmethod.InputConnection;
 import android.util.AttributeSet;
 import java.lang.Math;
+import android.graphics.drawable.BitmapDrawable;
 
 public class KeyboardView extends View {
   public KeyboardView(Context context) {
@@ -66,9 +67,17 @@ public class KeyboardView extends View {
 
   protected void onDraw(Canvas canvas) {
     Paint p = new Paint();
-    int i,j;
+    Resources res = getResources();
+    int i,j,bg;
 
-    p.setARGB(255,255,0,0);
+    p.setARGB((255*alpha)/10,255,255,255);
+    if (special) bg = sk.ksp.riso.quikdroid.R.drawable.kbd_special;
+    else if (shift==caps) bg = sk.ksp.riso.quikdroid.R.drawable.kbd_main;
+    else bg = sk.ksp.riso.quikdroid.R.drawable.kbd_shift;
+
+    canvas.drawBitmap( ((BitmapDrawable)(res.getDrawable(bg))).getBitmap(), null, new Rect(0, 0, size, size), p);
+
+    p.setARGB((255*alpha)/10,0,0,255);
     p.setStrokeWidth(1);
     for (i=0; i<REGIONS; i++)
       for (j=0; j<R[i].n-1; j++) 
@@ -110,9 +119,11 @@ public class KeyboardView extends View {
     public void init1(int size, int rot) {
       n = 0;
       addPt(size, 0.30, 0, rot);
-      addPt(size, 0.36, 0.15, rot);
-      addPt(size, 0.33, 0.33, rot);
-      addPt(size, 0.15, 0.36, rot);
+      addPt(size, 0.35, 0.20, rot);
+      addPt(size, 0.35, 0.28, rot);
+      addPt(size, 0.34, 0.34, rot);
+      addPt(size, 0.28, 0.35, rot);
+      addPt(size, 0.20, 0.35, rot);
       addPt(size, 0, 0.30, rot);
       x = getX(size, 1.0/8, 1.0/8, rot);
       y = getY(size, 1.0/8, 1.0/8, rot);
@@ -120,13 +131,13 @@ public class KeyboardView extends View {
 
     public void init2(int size, int rot) {
       n = 0;
-      addPt(size, 0.66, 0, rot);
-      addPt(size, 0.58, 0.21, rot);
-      addPt(size, 0.53, 0.26, rot);
-      addPt(size, 0.5, 0.27, rot);
-      addPt(size, 0.47, 0.26, rot);
-      addPt(size, 0.42, 0.21, rot);
-      addPt(size, 0.33, 0, rot);
+      addPt(size, 0.68, 0, rot);
+      addPt(size, 0.60, 0.24, rot);
+      addPt(size, 0.53, 0.29, rot);
+      addPt(size, 0.5, 0.30, rot);
+      addPt(size, 0.47, 0.29, rot);
+      addPt(size, 0.40, 0.24, rot);
+      addPt(size, 0.32, 0, rot);
       x = getX(size, 0.5, 1.0/8, rot);
       y = getX(size, 0.5, 1.0/8, rot);
     }
@@ -135,8 +146,8 @@ public class KeyboardView extends View {
       int i;
       n = 0;
       for (i=MAX_POINTS-1; i>=0; i--) {
-        addPt(size, 0.5 + 0.22*Math.sin( i*2*Math.PI/(MAX_POINTS-1) - 0.5*(MAX_POINTS-1)*2*Math.PI ),
-                    0.5 + 0.22*Math.cos( i*2*Math.PI/(MAX_POINTS-1) - 0.5*(MAX_POINTS-1)*2*Math.PI ),
+        addPt(size, 0.5 + 0.19*Math.sin( i*2*Math.PI/(MAX_POINTS-1) - 0.5*(MAX_POINTS-1)*2*Math.PI ),
+                    0.5 + 0.19*Math.cos( i*2*Math.PI/(MAX_POINTS-1) - 0.5*(MAX_POINTS-1)*2*Math.PI ),
                     rot );
       }
       x = getX(size, 0.5, 0.5, rot);
@@ -164,6 +175,7 @@ public class KeyboardView extends View {
 
   int size;
   int scale = 10;
+  int alpha = 5;
 
   void initRegions() {
     int i;
@@ -255,14 +267,14 @@ public class KeyboardView extends View {
     if (c==SHIFT) { 
       shift = !shift;  
       special = false;
-      display(false);
+      display();
     } else if (c==CAPS) { 
       caps = !caps; 
       special = false;
-      display(false);
+      display();
     } else if (c==SPECIAL) { 
       special = !special;
-      display(special);
+      display();
     } else if (c==MOVE_HOME) { 
       ic.commitText( "", -1024);
     } else if (c==MOVE_END) { 
@@ -272,7 +284,7 @@ public class KeyboardView extends View {
         ic.commitText( (new String( new char[] { (char)c } )).toUpperCase(), 1);
       else ic.commitText( new String( new char[] { (char)c } ), 1);
       shift = false;
-      display(special);
+      display();
     } else if (c<0) {
       ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, -c));
       ic.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, -c));
@@ -283,7 +295,9 @@ public class KeyboardView extends View {
 
     if (buffer[0] == DOWN && buffer[buflen-1] == UP) {
       if (buflen>10 && buffer[1]!=0 && buffer[buflen-2]!=0) {
-        resize( (buffer[buflen-2] - buffer[1] + 12) % 8 - 4);
+        int d = ( ( (buffer[2] - buffer[1] + 8) % 8 == 1 ) ? 1 : -1 ) * (buflen-10);
+        if (buffer[1]<=4) resize(d);
+        else realpha(d);
       } else if (buflen==3) {
         send( open[buffer[1]][buffer[1]] );
       } else if (buflen >=4) {
@@ -314,14 +328,8 @@ public class KeyboardView extends View {
       // ic.commitText( new String( new char[] { (char)('a'+r) } ), 1);
   }
 
-  void display(boolean special) {
-    if (special) 
-      setBackgroundResource(sk.ksp.riso.quikdroid.R.drawable.kbd_special);
-    else if (shift==caps)
-      setBackgroundResource(sk.ksp.riso.quikdroid.R.drawable.kbd_main);
-    else
-      setBackgroundResource(sk.ksp.riso.quikdroid.R.drawable.kbd_shift);
-        
+  void display() {
+    invalidate();
   }
 
   void resize(int inc) {
@@ -329,6 +337,13 @@ public class KeyboardView extends View {
     if (scale>10) scale = 10;
     if (scale<1) scale = 1;
     requestLayout();
+  }
+
+  void realpha(int inc) {
+    alpha += inc;
+    if (alpha>10) alpha = 10;
+    if (alpha<1) alpha = 1;
+    display();
   }
 
 }

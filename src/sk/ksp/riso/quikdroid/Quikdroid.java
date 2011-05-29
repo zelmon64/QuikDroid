@@ -150,8 +150,12 @@ public class Quikdroid extends InputMethodService {
     }
 
     public void onComputeInsets(Insets outInsets) {
-      outInsets.contentTopInsets = outInsets.visibleTopInsets = 
-        getWindow().getWindow().getDecorView().getHeight();
+      if (myInputView != null && !myInputView.isTransparent()) {
+        outInsets.contentTopInsets = outInsets.visibleTopInsets = 0;
+      } else {
+        outInsets.contentTopInsets = outInsets.visibleTopInsets = 
+          getWindow().getWindow().getDecorView().getHeight();
+      }
       outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
     }
 

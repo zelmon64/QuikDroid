@@ -70,14 +70,14 @@ public class KeyboardView extends View {
     Resources res = getResources();
     int i,j,bg;
 
-    p.setARGB((255*alpha)/10,255,255,255);
+    p.setARGB((255*Math.min(10,alpha))/10,255,255,255);
     if (special) bg = sk.ksp.riso.quikdroid.R.drawable.kbd_special;
     else if (shift==caps) bg = sk.ksp.riso.quikdroid.R.drawable.kbd_main;
     else bg = sk.ksp.riso.quikdroid.R.drawable.kbd_shift;
 
     canvas.drawBitmap( ((BitmapDrawable)(res.getDrawable(bg))).getBitmap(), null, new Rect(0, 0, size, size), p);
 
-    p.setARGB((255*alpha)/10,0,0,255);
+    p.setARGB((255*Math.min(10,alpha))/10,0,0,255);
     p.setStrokeWidth(1);
     for (i=0; i<REGIONS; i++)
       for (j=0; j<R[i].n-1; j++) 
@@ -341,9 +341,13 @@ public class KeyboardView extends View {
 
   void realpha(int inc) {
     alpha += inc;
-    if (alpha>10) alpha = 10;
+    if (alpha>11) alpha = 11;
     if (alpha<1) alpha = 1;
     display();
+  }
+
+  public boolean isTransparent() {
+    return alpha<=10;
   }
 
 }

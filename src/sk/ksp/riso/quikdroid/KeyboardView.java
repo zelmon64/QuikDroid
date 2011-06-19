@@ -243,9 +243,14 @@ public class KeyboardView extends View {
   static int SPECIAL = 65539;
   static int MOVE_HOME = 65540;
   static int MOVE_END = 65541;
+  static int CARON = 65542;
+  static int ACUTE = 65543;
+  static int UMLAUT = 65544;
+  static int VOKAN = 65545;
   boolean shift = false;
   boolean caps = false;
   boolean special = false;
+  int accent = 0;
 
   static int[][] open = { 
     { '5', 0, -KeyEvent.KEYCODE_DPAD_UP, 0, -KeyEvent.KEYCODE_DPAD_RIGHT, '\\', '0', '/', -KeyEvent.KEYCODE_DPAD_LEFT },
@@ -253,9 +258,9 @@ public class KeyboardView extends View {
     { -KeyEvent.KEYCODE_DPAD_DOWN, '^', '2', '-', '>', 0, 0/*-KeyEvent.KEYCODE_PAGE_DOWN*/, 0, '<' },
     { '\'', '%', '$', '3', /*paste*/0, ')', ']', '}', 0 },
     { -KeyEvent.KEYCODE_DPAD_LEFT, 0, 0, '!', '6', -KeyEvent.KEYCODE_ENTER, /*alt*/ 0, 0, MOVE_HOME },
-    { 0, 0, 0, ':', ';', '9', '*', '&', 0 },
+    { CARON, VOKAN, 0, ':', ';', '9', '*', '&', 0 },
     { 0, 0, 0/*-KeyEvent.KEYCODE_PAGE_UP*/, 0, 0, '_', '8', '@', 0 },
-    { 0, '#', 0, 0, 0, '+', '~', '7', '"' },
+    { ACUTE, '#', 0, UMLAUT, 0, '+', '~', '7', '"' },
     { -KeyEvent.KEYCODE_DPAD_RIGHT, 0/*-KeyEvent.KEYCODE_ESCAPE*/, 0, 0, MOVE_END, 0, /*ctrl*/0, SPECIAL, '4' },
   }; 
 
@@ -287,10 +292,43 @@ public class KeyboardView extends View {
       ic.commitText( "", -1024);
     } else if (c==MOVE_END) { 
       ic.commitText( "", 1024);
+    } else if (c==CARON || c==ACUTE || c==UMLAUT || c==VOKAN) { 
+      if (accent==0) accent = c;
+      else accent = 0;
     } else if (c>0) {
+      String s = new String( new char[] { (char)c } );
+
+      if (accent == CARON) {
+        if (s.equals("c")) s = "č";
+        if (s.equals("d")) s = "ď";
+        if (s.equals("e")) s = "ě";
+        if (s.equals("l")) s = "ľ";
+        if (s.equals("n")) s = "ň";
+        if (s.equals("r")) s = "ř";
+        if (s.equals("s")) s = "š";
+        if (s.equals("t")) s = "ť";
+        if (s.equals("z")) s = "ž";
+      } else if (accent == ACUTE) {
+        if (s.equals("a")) s = "á";
+        if (s.equals("e")) s = "é";
+        if (s.equals("i")) s = "í";
+        if (s.equals("l")) s = "ĺ";
+        if (s.equals("o")) s = "ó";
+        if (s.equals("r")) s = "ŕ";
+        if (s.equals("u")) s = "ú";
+        if (s.equals("y")) s = "ý";
+      } else if (accent == UMLAUT) {
+        if (s.equals("a")) s = "ä";
+        if (s.equals("e")) s = "ë";
+        if (s.equals("u")) s = "ü";
+        if (s.equals("o")) s = "ö";
+      } else if (accent == VOKAN) {
+        if (s.equals("o")) s = "ô";
+      }
+      accent = 0;
       if (shift != caps)
-        ic.commitText( (new String( new char[] { (char)c } )).toUpperCase(), 1);
-      else ic.commitText( new String( new char[] { (char)c } ), 1);
+        ic.commitText( s.toUpperCase(), 1);
+      else ic.commitText( s, 1);
       shift = false;
       display();
     } else if (c<0) {
@@ -325,6 +363,14 @@ public class KeyboardView extends View {
     if (buflen>=3 && buffer[0] == 0 && buffer[buflen-1] == 0) {
       send( closed[buffer[1]][buffer[buflen-2]] );
       buflen = 1;
+      return;
+    }
+    if (buflen>=5 && buffer[2] == 0 && buffer[buflen-1] == 0 &&
+                     buffer[0] == DOWN) {
+      send( open[buffer[1]][0] );
+      send( closed[buffer[3]][buffer[buflen-2]] );
+      buflen = 1;
+      buffer[0] = 0;
       return;
     }
     if (buflen>=4 && buffer[1] == 0 && buffer[buflen-1] == 0) {

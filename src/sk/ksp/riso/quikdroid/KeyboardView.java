@@ -31,6 +31,7 @@ import android.view.inputmethod.InputConnection;
 import android.util.AttributeSet;
 import java.lang.Math;
 import android.graphics.drawable.BitmapDrawable;
+import android.content.SharedPreferences;
 
 public class KeyboardView extends View {
   public KeyboardView(Context context) {
@@ -70,6 +71,12 @@ public class KeyboardView extends View {
     Resources res = getResources();
     int i,j,bg;
 
+    if (!isTransparent()) {
+      p.setARGB(255,255,255,255);
+      p.setStyle(Paint.Style.FILL);
+      canvas.drawRect(0,0, size, size, p);
+    }
+
     p.setARGB((255*Math.min(10,alpha))/10,255,255,255);
     if (special) bg = sk.ksp.riso.quikdroid.R.drawable.kbd_special;
     else if (shift==caps) bg = sk.ksp.riso.quikdroid.R.drawable.kbd_main;
@@ -78,7 +85,8 @@ public class KeyboardView extends View {
     canvas.drawBitmap( ((BitmapDrawable)(res.getDrawable(bg))).getBitmap(), null, new Rect(0, 0, size, size), p);
 
     p.setARGB((255*Math.min(10,alpha))/10,0,0,255);
-    p.setStrokeWidth(1);
+    p.setStrokeWidth(2);
+    p.setStyle(Paint.Style.STROKE);
     for (i=0; i<REGIONS; i++)
       for (j=0; j<R[i].n-1; j++) 
         canvas.drawLine(R[i].P[j<<1], R[i].P[j<<1 | 1], 
@@ -335,7 +343,7 @@ public class KeyboardView extends View {
   void resize(int inc) {
     scale += inc;
     if (scale>10) scale = 10;
-    if (scale<1) scale = 1;
+    if (scale<4) scale = 4;
     requestLayout();
   }
 
@@ -348,6 +356,20 @@ public class KeyboardView extends View {
 
   public boolean isTransparent() {
     return alpha<=10;
+  }
+
+  public void savePreferences(SharedPreferences settings) {
+    SharedPreferences.Editor editor = settings.edit();
+    editor.putInt("alpha", alpha);
+    editor.putInt("scale", scale);
+    // Commit the edits!
+    editor.commit();
+  }
+
+  public void loadPreferences(SharedPreferences settings) {
+    alpha = settings.getInt("alpha", 5);
+    scale = settings.getInt("scale", 10);
+    requestLayout();
   }
 
 }

@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" 
         package="sk.ksp.riso.quikdroid">
+    <uses-sdk android:minSdkVersion="1"/>
+    <uses-sdk android:targetSdkVersion="8"/>
     <application android:label="@string/ime_name">
         <service android:name="Quikdroid"
                 android:permission="android.permission.BIND_INPUT_METHOD">

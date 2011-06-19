@@ -31,6 +31,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.content.res.Configuration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,8 @@ public class Quikdroid extends InputMethodService {
      */
     @Override public void onInitializeInterface() {
     }
+
+    static final String prefname = "KbdView";
     
     /**
      * Called by the framework when your view for creating input needs to
@@ -70,6 +73,7 @@ public class Quikdroid extends InputMethodService {
     @Override public View onCreateInputView() {
         myInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
+        myInputView.loadPreferences(getSharedPreferences(prefname, 0));
         myInputView.setInputConnection(getCurrentInputConnection());
         return myInputView;
     }
@@ -157,6 +161,19 @@ public class Quikdroid extends InputMethodService {
           getWindow().getWindow().getDecorView().getHeight();
       }
       outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
+    }
+
+    public void onWindowHidden() {
+      if (myInputView != null ) {
+        myInputView.savePreferences(getSharedPreferences(prefname, 0));
+      }
+    }
+
+    public void onConfigurationChanged(Configuration newConfig) {
+      if (myInputView != null ) {
+        myInputView.savePreferences(getSharedPreferences(prefname, 0));
+      }
+      super.onConfigurationChanged(newConfig);
     }
 
 }

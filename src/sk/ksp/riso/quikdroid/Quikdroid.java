@@ -127,10 +127,10 @@ public class Quikdroid extends InputMethodService {
      * this to reset our state.
      */
     @Override public void onFinishInput() {
-        super.onFinishInput();
         if (myInputView != null) {
           myInputView.setInputConnection(null);
         }
+        super.onFinishInput();
     }
     
 /*    

@@ -167,6 +167,7 @@ public class Quikdroid extends InputMethodService {
       if (myInputView != null ) {
         myInputView.savePreferences(getSharedPreferences(prefname, 0));
       }
+      super.onWindowHidden();
     }
 
     public void onConfigurationChanged(Configuration newConfig) {

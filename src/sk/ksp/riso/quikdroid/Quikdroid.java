@@ -30,6 +30,8 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -73,7 +75,7 @@ public class Quikdroid extends InputMethodService {
      * a configuration change.
      */
     @Override public View onCreateInputView() {
-        super.onCreateInputView();
+        // super.onCreateInputView();
         myInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
         myInputView.loadPreferences(getSharedPreferences(prefname, 0));
@@ -87,6 +89,17 @@ public class Quikdroid extends InputMethodService {
      */
     @Override public View onCreateCandidatesView() {
         return null;
+    }
+
+    @Override public void onConfigureWindow(Window win, boolean isFullscreen, boolean isCandidatesOnly) {
+        WindowManager.LayoutParams lp = win.getAttributes();
+
+        lp.verticalMargin = 0;
+        lp.horizontalMargin = 0;
+
+        win.setAttributes(lp);
+        win.setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     /**
@@ -106,11 +119,9 @@ public class Quikdroid extends InputMethodService {
       View oldInputView = myInputView;
       super.updateInputViewShown();
       if (myInputView != null && oldInputView != myInputView) {
-        getWindow().getWindow().setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
-                                          android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-        myInputView.setLayoutParams( new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-
         if (Build.VERSION.SDK_INT < 11) {
+          myInputView.setLayoutParams( new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+                                                                    LayoutParams.WRAP_CONTENT));
           if (myInputView.getParent() != null) {
             ViewGroup inputFrame = (ViewGroup)(myInputView.getParent());
             inputFrame.removeAllViews();
@@ -149,7 +160,7 @@ public class Quikdroid extends InputMethodService {
 */
     
     public boolean onEvaluateFullscreenMode() {
-      return true;
+      return Build.VERSION.SDK_INT < 11;
     }
 
     public void onUpdateExtractingViews(EditorInfo ei) {
@@ -169,14 +180,17 @@ public class Quikdroid extends InputMethodService {
       } else {
         outInsets.contentTopInsets = outInsets.visibleTopInsets = h;
       }
-      if (Build.VERSION.SDK_INT < 11) {
+      if (Build.VERSION.SDK_INT < 110) {
         outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
       } else {
+        /*
         int w = getWindow().getWindow().getDecorView().getWidth();
         int l = getWindow().getWindow().getDecorView().getLeft();
-        // Log.v("quikdroid", "onComputeInsets: w = " + w);
+        Log.v("quikdroid", "onComputeInsets: w = " + w + " h = " + h +
+            " mw = " + myInputView.getWidth() + " mh = " + myInputView.getHeight());
         outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION;
         outInsets.touchableRegion.set(l, 0, h, l + w);
+        */
       }
     }
 

@@ -37,6 +37,7 @@ import android.util.Log;
 
 public class KeyboardView extends View {
   Vibrator vib;
+  boolean hack_is_measured = false;
 
   public KeyboardView(Context context) {
     super(context);
@@ -65,14 +66,23 @@ public class KeyboardView extends View {
   }
 
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    int w = (Math.min(View.MeasureSpec.getSize(widthMeasureSpec), 
-                      View.MeasureSpec.getSize(heightMeasureSpec) )*scale) / 10;
+    int w;
+    if (hack_is_measured) {
+      w = size;
+    } else {
+      w = (Math.min(View.MeasureSpec.getSize(widthMeasureSpec), 
+                    View.MeasureSpec.getSize(heightMeasureSpec) )*scale) / 10;
+      size = w;
+      hack_is_measured = true;
+    }
+    Log.v("quikdroid", "setMeasuredDimensions: orig = " + View.MeasureSpec.getSize(widthMeasureSpec) + " w = " + w);
     setMeasuredDimension(w, w);
   }
 
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-    // Log.v("quikdroid", "view onSizeChanged: w = " + w);
+    Log.v("quikdroid", "view onSizeChanged: w = " + w);
     size = w;
+    hack_is_measured = false;
     resetRegions();
   }
 
@@ -80,6 +90,8 @@ public class KeyboardView extends View {
     Paint p = new Paint();
     Resources res = getResources();
     int i,j,bg;
+
+    hack_is_measured = false;
 
     if (!isTransparent()) {
       p.setARGB(255,255,255,255);

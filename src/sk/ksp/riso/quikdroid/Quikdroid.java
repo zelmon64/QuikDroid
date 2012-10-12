@@ -60,6 +60,7 @@ public class Quikdroid extends InputMethodService {
      * is called after creation and any configuration change.
      */
     @Override public void onInitializeInterface() {
+        super.onInitializeInterface();
     }
 
     static final String prefname = "KbdView";
@@ -71,6 +72,7 @@ public class Quikdroid extends InputMethodService {
      * a configuration change.
      */
     @Override public View onCreateInputView() {
+        super.onCreateInputView();
         myInputView = (KeyboardView) getLayoutInflater().inflate(
                 R.layout.input, null);
         myInputView.loadPreferences(getSharedPreferences(prefname, 0));

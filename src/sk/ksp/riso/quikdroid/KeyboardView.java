@@ -32,21 +32,29 @@ import android.util.AttributeSet;
 import java.lang.Math;
 import android.graphics.drawable.BitmapDrawable;
 import android.content.SharedPreferences;
+import android.os.Vibrator;
 
 public class KeyboardView extends View {
+  Vibrator vib;
+
   public KeyboardView(Context context) {
     super(context);
-    initRegions();
+    commonInit(context);
   }
 
   public KeyboardView(Context context, AttributeSet attr) {
     super(context, attr);
-    initRegions();
+    commonInit(context);
   }
 
   public KeyboardView(Context context, AttributeSet attr, int defStyle) {
     super(context, attr, defStyle);
+    commonInit(context);
+  }
+
+  public void commonInit(Context context) {
     initRegions();
+    vib = (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
   }
 
   InputConnection ic;
@@ -225,8 +233,10 @@ public class KeyboardView extends View {
         int r = getRegion( (int)event.getX(), (int)event.getY() );
         if (r != -1) {
           if (buflen==BUFSIZE-1) buflen = 0;
-          if (buflen == 0 || buffer[buflen-1] != r)
+          if (buflen == 0 || buffer[buflen-1] != r) {
             buffer[buflen++] = r;
+            vib.vibrate(10);
+          }
         }
       }
       if (event.getAction() == event.ACTION_UP) {

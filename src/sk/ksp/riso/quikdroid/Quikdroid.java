@@ -32,6 +32,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.content.res.Configuration;
+import android.os.Build;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,16 +110,20 @@ public class Quikdroid extends InputMethodService {
                                           android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         myInputView.setLayoutParams( new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
-        if (myInputView.getParent() != null) {
-          ViewGroup inputFrame = (ViewGroup)(myInputView.getParent());
-          inputFrame.removeAllViews();
-          if (inputFrame.getParent() != null) {
-            ViewGroup inputFrameP = (ViewGroup)(inputFrame.getParent());
-            inputFrameP.removeAllViews();
-            inputFrameP.addView(myInputView, new FrameLayout.LayoutParams(
-                  LayoutParams.WRAP_CONTENT,
-                  LayoutParams.WRAP_CONTENT));
+        if (Build.VERSION.SDK_INT < 11) {
+          if (myInputView.getParent() != null) {
+            ViewGroup inputFrame = (ViewGroup)(myInputView.getParent());
+            inputFrame.removeAllViews();
+            if (inputFrame.getParent() != null) {
+              ViewGroup inputFrameP = (ViewGroup)(inputFrame.getParent());
+              inputFrameP.removeAllViews();
+              inputFrameP.addView(myInputView, new FrameLayout.LayoutParams(
+                    LayoutParams.WRAP_CONTENT,
+                    LayoutParams.WRAP_CONTENT));
+            }
           }
+        } else {
+          // no ugly hack necessary for Honeycomb and up.
         }
       }
 
@@ -156,13 +161,23 @@ public class Quikdroid extends InputMethodService {
     }
 
     public void onComputeInsets(Insets outInsets) {
-      if (myInputView != null && !myInputView.isTransparent()) {
+      if (myInputView == null) return;
+
+      int h = getWindow().getWindow().getDecorView().getHeight();
+      if (!myInputView.isTransparent()) {
         outInsets.contentTopInsets = outInsets.visibleTopInsets = 0;
       } else {
-        outInsets.contentTopInsets = outInsets.visibleTopInsets = 
-          getWindow().getWindow().getDecorView().getHeight();
+        outInsets.contentTopInsets = outInsets.visibleTopInsets = h;
       }
-      outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
+      if (Build.VERSION.SDK_INT < 11) {
+        outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
+      } else {
+        int w = getWindow().getWindow().getDecorView().getWidth();
+        int l = getWindow().getWindow().getDecorView().getLeft();
+        // Log.v("quikdroid", "onComputeInsets: w = " + w);
+        outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION;
+        outInsets.touchableRegion.set(l, 0, h, l + w);
+      }
     }
 
     public void onWindowHidden() {

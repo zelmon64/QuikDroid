@@ -33,6 +33,7 @@ import java.lang.Math;
 import android.graphics.drawable.BitmapDrawable;
 import android.content.SharedPreferences;
 import android.os.Vibrator;
+import android.util.Log;
 
 public class KeyboardView extends View {
   Vibrator vib;
@@ -64,12 +65,13 @@ public class KeyboardView extends View {
   }
 
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    int w = (Math.min( View.MeasureSpec.getSize(widthMeasureSpec), 
+    int w = (Math.min(View.MeasureSpec.getSize(widthMeasureSpec), 
                       View.MeasureSpec.getSize(heightMeasureSpec) )*scale) / 10;
     setMeasuredDimension(w, w);
   }
 
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    // Log.v("quikdroid", "view onSizeChanged: w = " + w);
     size = w;
     resetRegions();
   }

@@ -206,6 +206,7 @@ public class KeyboardView extends View {
   int size;
   int scale = 10;
   int alpha = 5;
+  int orig_alpha = alpha;
 
   void initRegions() {
     int i;
@@ -234,9 +235,12 @@ public class KeyboardView extends View {
   static int BUFSIZE = 64;
   int[] buffer = new int[BUFSIZE];
   int buflen = 0;
+  int vib_len = 30;
+  int orig_vib_len = vib_len;
+  static int VIB_MIN = 5;
+  static int VIB_MAX = 200;
   static int DOWN = -1;
   static int UP = -2;
-  boolean vib_on = false;
 
   public boolean onTouchEvent(MotionEvent event) {
     if (ic != null) {
@@ -250,26 +254,13 @@ public class KeyboardView extends View {
           if (buflen==BUFSIZE-1) buflen = 0;
           if (buflen == 0 || buffer[buflen-1] != r) {
             buffer[buflen++] = r;
-            if (vib_on) {
-              vib.cancel();
-              vib_on = false;
-            } else {
-//              vib.vibrate(30);  // good for LG
-              vib.vibrate(8);
-            }
-          }
-        } else {
-          if (vib_on == false) {
-            vib_on = true;
-            vib.vibrate(1000);
+            vib.vibrate(vib_len);
           }
         }
       }
       if (event.getAction() == event.ACTION_UP) {
         if (buflen==BUFSIZE-1) buflen = 0;
         buffer[buflen++] = UP;
-        vib.cancel();
-        vib_on = false;
       }
       processBuffer();
     }
@@ -375,19 +366,41 @@ public class KeyboardView extends View {
     }
   }
 
+  int bufDir(int p) {
+    if (buffer[p] >=1 && buffer[p] <= 8 && buffer[p-1] >= 1 && buffer[p-1] <= 8 ) {
+      return ((buffer[p] - buffer[p-1] + 8) % 8 == 1) ? 1 : -1;
+    }
+    return 0;
+  }
+
   void processBuffer() {
 
+    if (buffer[0] == DOWN && buflen > 9 && buffer[1] != 0 ) {
+      int d = 0;
+      for (int i = 9; i < buflen; ++i) {
+        d += bufDir(i);
+      }
+
+      if (buffer[1] == 4 || buffer[1] == 8) {
+        d -= bufDir(buflen - 1);
+        reviblen(d);
+      }
+      else if (buffer[1] > 4 ) realpha(d);
+
+      if (buffer[buflen - 1] == UP) {
+        if (buffer[1] <= 3) resize(d);
+        buflen = 0;
+        orig_alpha = alpha;
+        orig_vib_len = vib_len;
+      }
+      return;
+    }
     if (buffer[0] == DOWN && buffer[buflen-1] == UP) {
-      if (buflen>10 && buffer[1]!=0 && buffer[buflen-2]!=0) {
-        int d = ( ( (buffer[2] - buffer[1] + 8) % 8 == 1 ) ? 1 : -1 ) * (buflen-10);
-        if (buffer[1]<=4) resize(d);
-        else realpha(d);
-      } else if (buflen==3) {
+      if (buflen==3) {
         send( open[buffer[1]][buffer[1]] );
       } else if (buflen >=4) {
         send( open[buffer[1]][buffer[buflen-2]] );
       }
-
       buflen = 0;
       return;
     }
@@ -432,10 +445,20 @@ public class KeyboardView extends View {
   }
 
   void realpha(int inc) {
-    alpha += inc;
+    alpha = orig_alpha + inc;
     if (alpha>11) alpha = 11;
     if (alpha<1) alpha = 1;
     display();
+  }
+
+  void reviblen(int inc) {
+    if (orig_vib_len == 0) {
+      vib_len = (int)(VIB_MIN * Math.pow(1.2, inc));
+    } else {
+      vib_len = (int)(orig_vib_len * Math.pow(1.2, inc));
+    }
+    if (vib_len < VIB_MIN) vib_len = 0;
+    if (vib_len > VIB_MAX) vib_len = VIB_MAX;
   }
 
   public boolean isTransparent() {
@@ -446,6 +469,7 @@ public class KeyboardView extends View {
     SharedPreferences.Editor editor = settings.edit();
     editor.putInt("alpha", alpha);
     editor.putInt("scale", scale);
+    editor.putInt("vib_len", vib_len);
     // Commit the edits!
     editor.commit();
   }
@@ -453,6 +477,10 @@ public class KeyboardView extends View {
   public void loadPreferences(SharedPreferences settings) {
     alpha = settings.getInt("alpha", 5);
     scale = settings.getInt("scale", 10);
+    vib_len = settings.getInt("vib_len", 30);
+
+    orig_alpha = alpha;
+    orig_vib_len = vib_len;
     requestLayout();
   }
 

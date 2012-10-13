@@ -236,6 +236,7 @@ public class KeyboardView extends View {
   int buflen = 0;
   static int DOWN = -1;
   static int UP = -2;
+  boolean vib_on = false;
 
   public boolean onTouchEvent(MotionEvent event) {
     if (ic != null) {
@@ -249,13 +250,26 @@ public class KeyboardView extends View {
           if (buflen==BUFSIZE-1) buflen = 0;
           if (buflen == 0 || buffer[buflen-1] != r) {
             buffer[buflen++] = r;
-            vib.vibrate(30);
+            if (vib_on) {
+              vib.cancel();
+              vib_on = false;
+            } else {
+//              vib.vibrate(30);  // good for LG
+              vib.vibrate(8);
+            }
+          }
+        } else {
+          if (vib_on == false) {
+            vib_on = true;
+            vib.vibrate(1000);
           }
         }
       }
       if (event.getAction() == event.ACTION_UP) {
         if (buflen==BUFSIZE-1) buflen = 0;
         buffer[buflen++] = UP;
+        vib.cancel();
+        vib_on = false;
       }
       processBuffer();
     }

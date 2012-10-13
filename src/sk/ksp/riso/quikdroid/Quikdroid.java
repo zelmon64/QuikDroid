@@ -92,12 +92,6 @@ public class Quikdroid extends InputMethodService {
     }
 
     @Override public void onConfigureWindow(Window win, boolean isFullscreen, boolean isCandidatesOnly) {
-        WindowManager.LayoutParams lp = win.getAttributes();
-
-        lp.verticalMargin = 0;
-        lp.horizontalMargin = 0;
-
-        win.setAttributes(lp);
         win.setLayout(android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 
             android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
     }
@@ -115,31 +109,6 @@ public class Quikdroid extends InputMethodService {
         }
     }
 
-    public void updateInputViewShown() {
-      View oldInputView = myInputView;
-      super.updateInputViewShown();
-      if (myInputView != null && oldInputView != myInputView) {
-        if (Build.VERSION.SDK_INT < 11) {
-          myInputView.setLayoutParams( new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                                                                    LayoutParams.WRAP_CONTENT));
-          if (myInputView.getParent() != null) {
-            ViewGroup inputFrame = (ViewGroup)(myInputView.getParent());
-            inputFrame.removeAllViews();
-            if (inputFrame.getParent() != null) {
-              ViewGroup inputFrameP = (ViewGroup)(inputFrame.getParent());
-              inputFrameP.removeAllViews();
-              inputFrameP.addView(myInputView, new FrameLayout.LayoutParams(
-                    LayoutParams.WRAP_CONTENT,
-                    LayoutParams.WRAP_CONTENT));
-            }
-          }
-        } else {
-          // no ugly hack necessary for Honeycomb and up.
-        }
-      }
-
-    }
-
     /**
      * This is called when the user is done editing a field.  We can use
      * this to reset our state.
@@ -151,16 +120,8 @@ public class Quikdroid extends InputMethodService {
         super.onFinishInput();
     }
     
-/*    
-    @Override public void onStartInputView(EditorInfo attribute, boolean restarting) {
-        super.onStartInputView(attribute, restarting);
-        // Apply the selected keyboard to the input view.
-        //myInputView.closing();
-    }
-*/
-    
     public boolean onEvaluateFullscreenMode() {
-      return Build.VERSION.SDK_INT < 11;
+      return false;
     }
 
     public void onUpdateExtractingViews(EditorInfo ei) {
@@ -180,18 +141,8 @@ public class Quikdroid extends InputMethodService {
       } else {
         outInsets.contentTopInsets = outInsets.visibleTopInsets = h;
       }
-      if (Build.VERSION.SDK_INT < 110) {
-        outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
-      } else {
-        /*
-        int w = getWindow().getWindow().getDecorView().getWidth();
-        int l = getWindow().getWindow().getDecorView().getLeft();
-        Log.v("quikdroid", "onComputeInsets: w = " + w + " h = " + h +
-            " mw = " + myInputView.getWidth() + " mh = " + myInputView.getHeight());
-        outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION;
-        outInsets.touchableRegion.set(l, 0, h, l + w);
-        */
-      }
+
+      outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME;
     }
 
     public void onWindowHidden() {

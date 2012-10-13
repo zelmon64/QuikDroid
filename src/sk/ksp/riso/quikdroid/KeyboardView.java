@@ -33,7 +33,7 @@ import java.lang.Math;
 import android.graphics.drawable.BitmapDrawable;
 import android.content.SharedPreferences;
 import android.os.Vibrator;
-import android.util.Log;
+//import android.util.Log;
 
 public class KeyboardView extends View {
   Vibrator vib;
@@ -75,12 +75,12 @@ public class KeyboardView extends View {
       size = w;
       hack_is_measured = true;
     }
-    Log.v("quikdroid", "setMeasuredDimensions: orig = " + View.MeasureSpec.getSize(widthMeasureSpec) + " w = " + w);
+    //Log.v("quikdroid", "setMeasuredDimensions: orig = " + View.MeasureSpec.getSize(widthMeasureSpec) + " w = " + w);
     setMeasuredDimension(w, w);
   }
 
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-    Log.v("quikdroid", "view onSizeChanged: w = " + w);
+    //Log.v("quikdroid", "view onSizeChanged: w = " + w);
     size = w;
     hack_is_measured = false;
     resetRegions();
@@ -249,7 +249,7 @@ public class KeyboardView extends View {
           if (buflen==BUFSIZE-1) buflen = 0;
           if (buflen == 0 || buffer[buflen-1] != r) {
             buffer[buflen++] = r;
-            vib.vibrate(10);
+            vib.vibrate(30);
           }
         }
       }

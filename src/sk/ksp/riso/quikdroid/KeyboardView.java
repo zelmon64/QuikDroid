@@ -22,6 +22,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.inputmethodservice.InputMethodService;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,15 +30,15 @@ import android.view.KeyEvent;
 import android.view.View.MeasureSpec;
 import android.view.inputmethod.InputConnection;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import java.lang.Math;
 import android.graphics.drawable.BitmapDrawable;
 import android.content.SharedPreferences;
 import android.os.Vibrator;
-//import android.util.Log;
+import android.util.Log;
 
 public class KeyboardView extends View {
   Vibrator vib;
-  boolean hack_is_measured = false;
 
   public KeyboardView(Context context) {
     super(context);
@@ -66,23 +67,20 @@ public class KeyboardView extends View {
   }
 
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    DisplayMetrics metrics = new DisplayMetrics();
+    ((android.view.WindowManager)getContext().getSystemService(InputMethodService.WINDOW_SERVICE))
+        .getDefaultDisplay().getMetrics(metrics);
+
     int w;
-    if (hack_is_measured) {
-      w = size;
-    } else {
-      w = (Math.min(View.MeasureSpec.getSize(widthMeasureSpec), 
-                    View.MeasureSpec.getSize(heightMeasureSpec) )*scale) / 10;
-      size = w;
-      hack_is_measured = true;
-    }
-    //Log.v("quikdroid", "setMeasuredDimensions: orig = " + View.MeasureSpec.getSize(widthMeasureSpec) + " w = " + w);
+    w = (Math.min(metrics.widthPixels, metrics.heightPixels)*scale) / 10;
+    size = w;
+    Log.v("quikdroid", "setMeasuredDimensions: orig = " + View.MeasureSpec.getSize(widthMeasureSpec) + " w = " + w);
     setMeasuredDimension(w, w);
   }
 
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-    //Log.v("quikdroid", "view onSizeChanged: w = " + w);
+    Log.v("quikdroid", "view onSizeChanged: w = " + w);
     size = w;
-    hack_is_measured = false;
     resetRegions();
   }
 
@@ -90,8 +88,6 @@ public class KeyboardView extends View {
     Paint p = new Paint();
     Resources res = getResources();
     int i,j,bg;
-
-    hack_is_measured = false;
 
     if (!isTransparent()) {
       p.setARGB(255,255,255,255);

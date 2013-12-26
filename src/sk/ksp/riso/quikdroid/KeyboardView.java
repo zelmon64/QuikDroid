@@ -18,8 +18,10 @@ package sk.ksp.riso.quikdroid;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.inputmethodservice.InputMethodService;
@@ -84,7 +86,12 @@ public class KeyboardView extends View {
     resetRegions();
   }
 
-  protected void onDraw(Canvas canvas) {
+  Bitmap content = null;
+
+  void refreshContent() {
+    content = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+    Canvas canvas = new Canvas(content);
+
     Paint p = new Paint();
     Resources res = getResources();
     int i,j,bg;
@@ -109,6 +116,28 @@ public class KeyboardView extends View {
       for (j=0; j<R[i].n-1; j++) 
         canvas.drawLine(R[i].P[j<<1], R[i].P[j<<1 | 1], 
                         R[i].P[(j+1)<<1], R[i].P[(j+1)<<1|1], p);
+  }
+
+  int highlighted_region = -1;
+
+  protected void onDraw(Canvas canvas) {
+    if (content == null) refreshContent();
+    Paint p = new Paint();
+    p.setARGB(255,255,255,255);
+    p.setStyle(Paint.Style.FILL);
+    canvas.drawBitmap( content, null, new Rect(0, 0, size, size), p);
+
+    if (highlighted_region >= 0) {
+      p.setARGB(128, 0, 255, 0);
+      p.setStyle(Paint.Style.FILL);
+      Path path = new Path();
+      path.moveTo(R[highlighted_region].P[0], R[highlighted_region].P[1]);
+      for (int j = 1; j < R[highlighted_region].n; j++) {
+        path.lineTo(R[highlighted_region].P[j<<1], R[highlighted_region].P[j<<1 | 1]);
+      }
+      path.close();
+      canvas.drawPath(path, p);
+    }
   }
 
   static class Region {
@@ -246,6 +275,10 @@ public class KeyboardView extends View {
       }
       if (event.getAction() == event.ACTION_DOWN || event.getAction() == event.ACTION_MOVE) {
         int r = getRegion( (int)event.getX(), (int)event.getY() );
+        if (r != highlighted_region) {
+          highlighted_region = r;
+          invalidate();
+        }
         if (r != -1) {
           if (buflen==BUFSIZE-1) buflen = 0;
           if (buflen == 0 || buffer[buflen-1] != r) {
@@ -257,6 +290,8 @@ public class KeyboardView extends View {
       if (event.getAction() == event.ACTION_UP) {
         if (buflen==BUFSIZE-1) buflen = 0;
         buffer[buflen++] = UP;
+        highlighted_region = -1;
+        invalidate();
       }
       processBuffer();
     }
@@ -430,6 +465,7 @@ public class KeyboardView extends View {
   }
 
   void display() {
+    refreshContent();
     invalidate();
   }
 
@@ -437,6 +473,7 @@ public class KeyboardView extends View {
     scale += inc;
     if (scale>10) scale = 10;
     if (scale<4) scale = 4;
+    content = null;
     requestLayout();
   }
 
@@ -477,7 +514,7 @@ public class KeyboardView extends View {
 
     orig_alpha = alpha;
     orig_vib_len = vib_len;
+    content = null;
     requestLayout();
   }
-
 }
